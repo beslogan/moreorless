@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>More or Less?</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: linear-gradient(135deg, #e0f2fe 0%, #fce7f3 60%, #fef9c3 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 14px 10px 24px;
+    overflow-x: hidden;
+  }
+
+  h1 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 2.2rem;
+    color: #0369a1;
+    text-shadow: 2px 2px 0 #bae6fd;
+    text-align: center;
+    margin-bottom: 2px;
+  }
+
+  .tagline {
+    font-size: 1rem;
+    color: #6b7280;
+    margin-bottom: 14px;
+    text-align: center;
+  }
+
+  /* Score bar */
+  .score-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 560px;
+    margin-bottom: 10px;
+    gap: 10px;
+  }
+
+  .score-chip {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.1rem;
+    padding: 6px 18px;
+    border-radius: 99px;
+    flex: 1;
+    text-align: center;
+  }
+
+  .chip-correct { background: #d1fae5; color: #065f46; }
+  .chip-wrong   { background: #fee2e2; color: #991b1b; }
+  .chip-round   { background: #e0f2fe; color: #0369a1; }
+
+  /* Main card */
+  .card {
+    background: white;
+    border-radius: 28px;
+    box-shadow: 0 8px 36px rgba(3,105,161,0.13);
+    padding: 22px 20px 26px;
+    width: 100%;
+    max-width: 560px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .instruction {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.3rem;
+    color: #374151;
+    text-align: center;
+  }
+
+  /* Number display */
+  .numbers-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    width: 100%;
+  }
+
+  .num-box {
+    background: #f0f9ff;
+    border: 4px solid #7dd3fc;
+    border-radius: 20px;
+    width: 130px;
+    height: 130px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .num-box .big-num {
+    font-family: 'Fredoka One', cursive;
+    font-size: 4rem;
+    color: #0369a1;
+    line-height: 1;
+  }
+
+  .num-box .dots-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 3px;
+    max-width: 80px;
+    margin-top: 4px;
+  }
+
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #38bdf8;
+  }
+
+  /* Sign slot — where the answer goes */
+  .sign-slot {
+    width: 90px;
+    height: 90px;
+    border: 4px dashed #d1d5db;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Fredoka One', cursive;
+    font-size: 3.8rem;
+    color: #6b7280;
+    background: #f9fafb;
+    transition: background 0.2s, border-color 0.2s;
+    flex-shrink: 0;
+  }
+
+  .sign-slot.correct {
+    background: #d1fae5;
+    border-color: #34d399;
+    color: #065f46;
+  }
+
+  .sign-slot.wrong {
+    background: #fee2e2;
+    border-color: #f87171;
+    color: #991b1b;
+  }
+
+  .sign-slot.filled {
+    border-style: solid;
+    border-color: #7dd3fc;
+    color: #0369a1;
+    background: #e0f2fe;
+  }
+
+  /* Answer buttons */
+  .choices {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .choice-btn {
+    font-family: 'Fredoka One', cursive;
+    font-size: 3rem;
+    width: 110px;
+    height: 110px;
+    border: 4px solid #e5e7eb;
+    border-radius: 20px;
+    background: white;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.12s, background 0.15s, border-color 0.15s;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.09);
+    gap: 0;
+    line-height: 1;
+    color: #374151;
+  }
+
+  .choice-btn span.label {
+    font-size: 0.75rem;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    color: #9ca3af;
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .choice-btn:hover { background: #f0f9ff; border-color: #7dd3fc; transform: scale(1.06); }
+  .choice-btn:active { transform: scale(0.96); }
+
+  .choice-btn.picked-correct {
+    background: #d1fae5; border-color: #34d399; color: #065f46;
+  }
+  .choice-btn.picked-wrong {
+    background: #fee2e2; border-color: #f87171; color: #991b1b;
+  }
+  .choice-btn.reveal-correct {
+    background: #d1fae5; border-color: #34d399; color: #065f46;
+  }
+  .choice-btn:disabled { cursor: default; transform: none; }
+
+  /* Feedback */
+  #feedbackMsg {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.6rem;
+    min-height: 2.2rem;
+    text-align: center;
+    transition: opacity 0.3s;
+  }
+
+  /* Explanation */
+  #explanation {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #374151;
+    text-align: center;
+    min-height: 1.4rem;
+    line-height: 1.4;
+  }
+
+  /* Next button */
+  #btnNext {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.3rem;
+    background: linear-gradient(135deg, #38bdf8, #0369a1);
+    color: white;
+    border: none;
+    border-radius: 16px;
+    padding: 14px 40px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(3,105,161,0.25);
+    transition: transform 0.12s, opacity 0.2s;
+    display: none;
+  }
+
+  #btnNext:hover { transform: scale(1.04); }
+  #btnNext:active { transform: scale(0.97); }
+
+  /* Difficulty toggle */
+  .diff-toggle {
+    display: flex;
+    gap: 6px;
+    background: #f3f4f6;
+    border-radius: 12px;
+    padding: 4px;
+  }
+
+  .diff-toggle button {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 0.88rem;
+    background: transparent;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 9px;
+    color: #6b7280;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .diff-toggle button.active {
+    background: white;
+    color: #0369a1;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+  }
+
+  /* Stars */
+  .star-burst {
+    position: fixed;
+    pointer-events: none;
+    z-index: 999;
+    font-size: 2.4rem;
+    animation: starfly 1s ease-out forwards;
+  }
+
+  @keyframes starfly {
+    0%   { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-90px) scale(1.6); }
+  }
+
+  /* Progress dots */
+  .progress-dots {
+    display: flex;
+    gap: 7px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .pdot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #e5e7eb;
+    transition: background 0.3s;
+  }
+  .pdot.correct { background: #34d399; }
+  .pdot.wrong   { background: #f87171; }
+  .pdot.current { background: #7dd3fc; }
+</style>
+</head>
+<body>
+
+<h1>🐊 More or Less?</h1>
+<p class="tagline">Which number is bigger? Tap the right sign!</p>
+
+<div class="score-bar">
+  <div class="score-chip chip-correct">✅ <span id="scoreCorrect">0</span></div>
+  <div class="score-chip chip-round">Round <span id="roundNum">1</span> / 10</div>
+  <div class="score-chip chip-wrong">❌ <span id="scoreWrong">0</span></div>
+</div>
+
+<div class="card">
+
+  <div class="diff-toggle">
+    <button id="d1" class="active" onclick="setDiff(1)">Easy (1–10)</button>
+    <button id="d2" onclick="setDiff(2)">Medium (1–20)</button>
+    <button id="d3" onclick="setDiff(3)">Hard (1–100)</button>
+  </div>
+
+  <div class="instruction" id="instruction">Which sign goes in the middle?</div>
+
+  <div class="numbers-row">
+    <div class="num-box" id="boxLeft">
+      <div class="big-num" id="numLeft">5</div>
+      <div class="dots-row" id="dotsLeft"></div>
+    </div>
+
+    <div class="sign-slot" id="signSlot">?</div>
+
+    <div class="num-box" id="boxRight">
+      <div class="big-num" id="numRight">3</div>
+      <div class="dots-row" id="dotsRight"></div>
+    </div>
+  </div>
+
+  <!-- Answer choices -->
+  <div class="choices">
+    <button class="choice-btn" id="btnLess" onclick="answer('<')">
+      &lt;
+      <span class="label">Less than</span>
+    </button>
+    <button class="choice-btn" id="btnEqual" onclick="answer('=')">
+      =
+      <span class="label">Equal</span>
+    </button>
+    <button class="choice-btn" id="btnMore" onclick="answer('>')">
+      &gt;
+      <span class="label">More than</span>
+    </button>
+  </div>
+
+  <div id="feedbackMsg"></div>
+  <div id="explanation"></div>
+
+  <button id="btnNext" onclick="nextRound()">Next ➜</button>
+
+  <div class="progress-dots" id="progressDots"></div>
+</div>
+
+<script>
+let diff = 1;
+let round = 0;
+let totalRounds = 10;
+let scoreCorrect = 0;
+let scoreWrong = 0;
+let numA, numB, correctSign;
+let answered = false;
+let history = [];
+
+function setDiff(d) {
+  diff = d;
+  [1,2,3].forEach(i => document.getElementById('d'+i).classList.toggle('active', i===d));
+  resetGame();
+}
+
+function resetGame() {
+  round = 0; scoreCorrect = 0; scoreWrong = 0; history = [];
+  document.getElementById('scoreCorrect').textContent = 0;
+  document.getElementById('scoreWrong').textContent = 0;
+  buildDots();
+  nextRound();
+}
+
+function buildDots() {
+  const wrap = document.getElementById('progressDots');
+  wrap.innerHTML = '';
+  for (let i = 0; i < totalRounds; i++) {
+    const d = document.createElement('div');
+    d.className = 'pdot' + (i === 0 ? ' current' : '');
+    d.id = 'pdot' + i;
+    wrap.appendChild(d);
+  }
+}
+
+function randNum() {
+  const max = diff === 1 ? 10 : diff === 2 ? 20 : 100;
+  return Math.floor(Math.random() * max) + 1;
+}
+
+function nextRound() {
+  if (round >= totalRounds) { showSummary(); return; }
+
+  answered = false;
+  numA = randNum();
+  // Occasionally make equal numbers (15% chance)
+  numB = Math.random() < 0.15 ? numA : randNum();
+  // Make sure they're different most of the time
+  if (numA === numB && Math.random() > 0.15) numB = randNum();
+
+  correctSign = numA < numB ? '<' : numA > numB ? '>' : '=';
+
+  document.getElementById('numLeft').textContent = numA;
+  document.getElementById('numRight').textContent = numB;
+  document.getElementById('signSlot').textContent = '?';
+  document.getElementById('signSlot').className = 'sign-slot';
+  document.getElementById('feedbackMsg').textContent = '';
+  document.getElementById('explanation').textContent = '';
+  document.getElementById('btnNext').style.display = 'none';
+  document.getElementById('instruction').textContent = 'Which sign goes in the middle?';
+
+  // Dots — only show for easy/medium
+  renderDots('dotsLeft', numA);
+  renderDots('dotsRight', numB);
+
+  // Reset buttons
+  ['btnLess','btnEqual','btnMore'].forEach(id => {
+    const b = document.getElementById(id);
+    b.disabled = false;
+    b.className = 'choice-btn';
+  });
+
+  // Update round display
+  round++;
+  document.getElementById('roundNum').textContent = round;
+
+  // Progress dots
+  for (let i = 0; i < totalRounds; i++) {
+    const dot = document.getElementById('pdot' + i);
+    if (!dot) continue;
+    dot.className = 'pdot';
+    if (i < round - 1) {
+      dot.classList.add(history[i] ? 'correct' : 'wrong');
+    } else if (i === round - 1) {
+      dot.classList.add('current');
+    }
+  }
+}
+
+function renderDots(id, n) {
+  const wrap = document.getElementById(id);
+  wrap.innerHTML = '';
+  if (diff > 1 || n > 10) { wrap.innerHTML = ''; return; } // only show dots in easy mode ≤10
+  for (let i = 0; i < n; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot';
+    wrap.appendChild(d);
+  }
+}
+
+function answer(sign) {
+  if (answered) return;
+  answered = true;
+
+  const isCorrect = sign === correctSign;
+  const slot = document.getElementById('signSlot');
+  slot.textContent = sign;
+
+  const btnMap = { '<': 'btnLess', '=': 'btnEqual', '>': 'btnMore' };
+  const correctBtnId = btnMap[correctSign];
+  const pickedBtnId  = btnMap[sign];
+
+  ['btnLess','btnEqual','btnMore'].forEach(id => {
+    document.getElementById(id).disabled = true;
+  });
+
+  if (isCorrect) {
+    slot.classList.add('correct');
+    document.getElementById(pickedBtnId).classList.add('picked-correct');
+    document.getElementById('feedbackMsg').textContent = ['Great job! 🌟','Correct! ⭐','You got it! 🎉','Awesome! 💫'][Math.floor(Math.random()*4)];
+    document.getElementById('feedbackMsg').style.color = '#059669';
+    scoreCorrect++;
+    document.getElementById('scoreCorrect').textContent = scoreCorrect;
+    spawnStars();
+  } else {
+    slot.classList.add('wrong');
+    document.getElementById(pickedBtnId).classList.add('picked-wrong');
+    document.getElementById(correctBtnId).classList.add('reveal-correct');
+    document.getElementById('feedbackMsg').textContent = 'Not quite! 🤔';
+    document.getElementById('feedbackMsg').style.color = '#dc2626';
+    scoreWrong++;
+    document.getElementById('scoreWrong').textContent = scoreWrong;
+  }
+
+  history.push(isCorrect);
+
+  // Explanation
+  const signWord = correctSign === '<' ? 'less than' : correctSign === '>' ? 'greater than' : 'equal to';
+  document.getElementById('explanation').textContent = `${numA} is ${signWord} ${numB}`;
+
+  document.getElementById('btnNext').style.display = 'inline-block';
+}
+
+function showSummary() {
+  document.getElementById('instruction').textContent = '🎉 All done!';
+  document.getElementById('numLeft').textContent = scoreCorrect;
+  document.getElementById('numRight').textContent = scoreWrong;
+  document.getElementById('signSlot').textContent = '✓';
+  document.getElementById('signSlot').className = 'sign-slot correct';
+  document.getElementById('feedbackMsg').textContent = scoreCorrect >= 8
+    ? 'Amazing work! 🌈⭐' : scoreCorrect >= 5
+    ? 'Good job! Keep practicing! 💪' : 'Keep trying — you can do it! 🌟';
+  document.getElementById('feedbackMsg').style.color = '#059669';
+  document.getElementById('explanation').textContent = `${scoreCorrect} correct out of ${totalRounds}`;
+  document.querySelector('.choices').style.display = 'none';
+
+  const nb = document.getElementById('btnNext');
+  nb.textContent = '🔄 Play Again';
+  nb.style.display = 'inline-block';
+  nb.onclick = () => {
+    document.querySelector('.choices').style.display = 'flex';
+    nb.textContent = 'Next ➜';
+    nb.onclick = nextRound;
+    resetGame();
+  };
+
+  if (scoreCorrect >= 8) spawnStars(12);
+}
+
+function spawnStars(count = 7) {
+  const emojis = ['⭐','🌟','✨','🎉','💫','🌈'];
+  for (let i = 0; i < count; i++) {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.className = 'star-burst';
+      el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+      el.style.left = (10 + Math.random() * 75) + 'vw';
+      el.style.top  = (20 + Math.random() * 50) + 'vh';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 1100);
+    }, i * 100);
+  }
+}
+
+// Start
+buildDots();
+nextRound();
+</script>
+</body>
+</html>
